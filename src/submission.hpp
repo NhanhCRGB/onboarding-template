@@ -77,7 +77,7 @@ for (size_t i = 1; i < r - 1; i++){
   const double* C_row = old_data + i * s_old;
   const double* U_row = old_data + (i + 1) * s_old;
   double* new_data_row = new_data +  i * s_new;
-}
+
 #pragma omp simd aligned(L_row, C_row, U_row, new_data_row : 64) safelen(8)
 for (size_t j  = 1;  j < c - 1; j++){
   new_data_row[j] = 0.5 * C_row[j] + 0.125 * (L_row[j]  + U_row[j] + C_row[j-1] + C_row[j+1]);

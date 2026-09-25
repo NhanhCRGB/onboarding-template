@@ -33,13 +33,13 @@ public:
 
   double* raw() const noexcept {return data_;}
 
-  double& operator()(std::size_t i, std::size_t j){
+  double& operator()(size_t i, size_t j){
     if(i >= rows_ || j >= cols_){
       throw std::out_of_range(" Grid index out of bound ");
     }
     return data_[i * elem_stride_ + j];
   }
-  double operator()(std::size_t i, std::size_t j) const{
+  double operator()(size_t i, size_t j) const{
     if(i >= rows_ || j >=cols_){
       throw std::out_of_range(" Grid index out of bound");
     }
@@ -81,5 +81,6 @@ for (size_t i = 1; i < r - 1; i++){
 #pragma omp simd aligned(L_row, C_row, U_row, new_data_row : 64) safelen(8)
 for (size_t j  = 1;  j < c - 1; j++){
   new_data_row[j] = 0.5 * C_row[j] + 0.125 * (L_row[j]  + U_row[j] + C_row[j-1] + C_row[j+1]);
-}
+    }
+  }
 }

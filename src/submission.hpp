@@ -59,17 +59,20 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid){
   size_t s_old = old_grid.stride();
   size_t s_new = new_grid.stride();
 
-  for(size_t i = 0; i < r;  ++i){
+  if(r == 0 || c == 0) return;
+
+  for(size_t i = 1; i < r - 1;  ++i){
     new_data[i * s_new] = old_data[i * s_old];
-    if (r > 1)
+    if (c > 1)
     new_data[i * s_new + c - 1] = old_data[i * s_old + c - 1];
   }
   
-  if (c > 1){
+  if (c > 0){
     std::memcpy(new_data, old_data, c * sizeof(double));
+    if (r > 1){
     std::memcpy(new_data + (r - 1) * s_new, old_data + (r - 1) * s_old, c * sizeof(double));
   }
-
+}
 
 #pragma omp parallel for schedule(static)
 for (size_t i = 1; i < r - 1; i++){

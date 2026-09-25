@@ -25,7 +25,7 @@ public:
     }
   }
   ~ Grid{
-    delete[] data_;}
+    delete[] data_;
 
   }
   Grid(const Grid&) = delete;

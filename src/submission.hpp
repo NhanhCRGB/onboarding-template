@@ -20,9 +20,10 @@ public:
     elem_stride_ = byte_stride / sizeof(double);
 
     data_ = new double[rows * elem_stride_];
-    for(size_t i = 0, i < rows_ * elem_stride_, i++){
+    for(size_t i = 0; i < rows_ * elem_stride_; ++i){
       data_[i] = 0.0;
     }
+  }
   ~ Grid{
     delete[] data_;}
 
@@ -30,7 +31,7 @@ public:
   Grid(const Grid&) = delete;
   Grid &operator = (const Grid&) = delete;
 
-  double* raw() noexcept {return data_;}
+  double* raw() const noexcept {return data_;}
 
   double& operator()(std::size_t i, std::size_t j){
     if(i >= rows_ || j >= cols_){
@@ -58,7 +59,7 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid){
   size_t s_old = old_grid.stride();
   size_t s_new = new_grid.stride();
 
-  for(size_t i = 0, i < r, ++i){
+  for(size_t i = 0; i < r;  ++i){
     new_data[i * s_new] = old_data[i * s_old];
     if (r > 1)
     new_data[i * s_new + c - 1] = old_data[i * s_old + c - 1];

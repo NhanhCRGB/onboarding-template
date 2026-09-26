@@ -44,7 +44,7 @@ public:
   Grid &operator = (const Grid&) = delete;
 
   double* raw() const noexcept {
-    return static_cast<double*>(__builtin_assume_aligned(data_, 64));
+    return data_;
   }
 
   double& operator()(size_t i, size_t j){
@@ -90,10 +90,10 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid){
 
 #pragma omp parallel for schedule(static)
 for (size_t i = 1; i < r - 1; i++){
-  const double* __restrict L_row = (const double*)__builtin_assume_aligned(old_data + (i - 1) * s_old, 64);
-  const double* __restrict C_row = (const double*)__builtin_assume_aligned(old_data + i * s_old, 64);
-  const double* __restrict U_row = (const double*)__builtin_assume_aligned(old_data + (i + 1) * s_old, 64);
-  double* __restrict new_data_row = (double*)__builtin_assume_aligned(new_data +  i * s_new, 64);
+  const double* __restrict L_row = (old_data + (i - 1) * s_old);
+  const double* __restrict C_row = (old_data + i * s_old);
+  const double* __restrict U_row = (old_data + (i + 1) * s_old);
+  double* __restrict new_data_row = (new_data +  i * s_new);
 
 #pragma omp simd aligned(L_row, C_row, U_row, new_data_row : 64)
 for (size_t j  = 1;  j < c - 1; j++){

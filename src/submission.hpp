@@ -4,7 +4,9 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-
+#include <vector>
+#include <cstdlib>
+#include <new>
 
 class Grid {
 private:
@@ -18,19 +20,32 @@ public:
     size_t byte_stride = (cols * sizeof(double) + 63)& ~ 63;
     elem_stride_ = byte_stride / sizeof(double);
 
-    data_ = new double[rows * elem_stride_];
+    size_t total_bytes = rows_ * elem_stride * sizeof(double);
+
+    if(total_bytes == 0){
+      data_ = nullptr;
+      return;
+    }
+    void* raw_mem = std::aligned_alloc(64, total_bytes);
+    if (!raw_mem){
+      throw std::bad_alloc();
+    }
+
+    data_ = static_cast<double*>(raw_mem);
     for(size_t i = 0; i < rows_ * elem_stride_; ++i){
       data_[i] = 0.0;
     }
   }
   ~ Grid()  {
-    delete[] data_;
+    std::free(data_);
 
   }
   Grid(const Grid&) = delete;
   Grid &operator = (const Grid&) = delete;
 
-  double* raw() const noexcept {return data_;}
+  double* raw() const noexcept {
+    return static_cast<double*>(__builtin_assume_aligned(data_, 64));
+  }
 
   double& operator()(size_t i, size_t j){
     if(i >= rows_ || j >= cols_){
@@ -51,8 +66,8 @@ public:
 };  
 
 void apply_stencil(const Grid& old_grid, Grid& new_grid){
-  const double* old_data = old_grid.raw();
-  double* new_data = new_grid.raw();
+  const double* __restrict old_data = old_grid.raw();
+  double* __restrict new_data = new_grid.raw();
   size_t r = old_grid.rows();
   size_t c = old_grid.cols();
   size_t s_old = old_grid.stride();
@@ -75,12 +90,12 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid){
 
 #pragma omp parallel for schedule(static)
 for (size_t i = 1; i < r - 1; i++){
-  const double* L_row = old_data + (i - 1) * s_old;
-  const double* C_row = old_data + i * s_old;
-  const double* U_row = old_data + (i + 1) * s_old;
-  double* new_data_row = new_data +  i * s_new;
+  const double* __restrict L_row = (const double*)__builtin_assume_aligned(old_data + (i - 1) * s_old, 64)
+  const double* __restrict C_row = (const double*)__builtin_assume_aligned(old_data + i * s_old, 64)
+  const double* __restrict U_row = (const double*)__builtin_assume_aligned(old_data + (i + 1) * s_old, 64)
+  double* __restrict new_data_row = (double*)__builtin_assume_aligned(new_data +  i * s_new, 64)
 
-#pragma omp simd 
+#pragma omp simd aligned(L_row, C_row, U_row, new_data_row : 64)
 for (size_t j  = 1;  j < c - 1; j++){
   new_data_row[j] = 0.5 * C_row[j] + 0.125 * (L_row[j]  + U_row[j] + C_row[j-1] + C_row[j+1]);
     }

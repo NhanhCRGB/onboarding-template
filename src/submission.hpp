@@ -20,7 +20,7 @@ public:
     size_t byte_stride = (cols * sizeof(double) + 63)& ~ 63;
     elem_stride_ = byte_stride / sizeof(double);
 
-    size_t total_bytes = rows_ * elem_stride * sizeof(double);
+    size_t total_bytes = rows_ * elem_stride_  * sizeof(double);
 
     if(total_bytes == 0){
       data_ = nullptr;
@@ -90,10 +90,10 @@ void apply_stencil(const Grid& old_grid, Grid& new_grid){
 
 #pragma omp parallel for schedule(static)
 for (size_t i = 1; i < r - 1; i++){
-  const double* __restrict L_row = (const double*)__builtin_assume_aligned(old_data + (i - 1) * s_old, 64)
-  const double* __restrict C_row = (const double*)__builtin_assume_aligned(old_data + i * s_old, 64)
-  const double* __restrict U_row = (const double*)__builtin_assume_aligned(old_data + (i + 1) * s_old, 64)
-  double* __restrict new_data_row = (double*)__builtin_assume_aligned(new_data +  i * s_new, 64)
+  const double* __restrict L_row = (const double*)__builtin_assume_aligned(old_data + (i - 1) * s_old, 64);
+  const double* __restrict C_row = (const double*)__builtin_assume_aligned(old_data + i * s_old, 64);
+  const double* __restrict U_row = (const double*)__builtin_assume_aligned(old_data + (i + 1) * s_old, 64);
+  double* __restrict new_data_row = (double*)__builtin_assume_aligned(new_data +  i * s_new, 64);
 
 #pragma omp simd aligned(L_row, C_row, U_row, new_data_row : 64)
 for (size_t j  = 1;  j < c - 1; j++){
